@@ -160,8 +160,11 @@ export default function Admin() {
   };
 
   const handleLogout = () => {
+    toast.success("Logged out successfully!");
     localStorage.removeItem("adminUser");
-    window.location.href = "/login";
+    setTimeout(() => {
+      window.location.href = "/login";
+    }, 1000);
   };
 
   const addStudent = async () => {
