@@ -68,13 +68,34 @@ export function LoginForm({
             window.location.href = "/admin"
           }, 1000)
         } else if (user.role === 'student') {
+          // Fetch the student's year level from students table
+          const { data: studentData, error: studentError } = await supabase
+            .from("students")
+            .select("year_level, name")
+            .eq("user_id", user.id)
+            .single()
+          
+          if (studentError || !studentData) {
+            toast.error("Student record not found")
+            setLoading(false)
+            return
+          }
+          
+          // Validate selected year level matches stored year level
+          if (studentData.year_level !== yearLevel) {
+            toast.error(`Invalid year level. You are assigned to: ${studentData.year_level}`)
+            setLoading(false)
+            return
+          }
+          
           const studentUserWithYearLevel = {
             ...user,
-            year_level: yearLevel
+            year_level: studentData.year_level,
+            name: studentData.name
           }
           
           localStorage.setItem("studentUser", JSON.stringify(studentUserWithYearLevel))
-          toast.success(`Welcome back, Student! (${yearLevel})`)
+          toast.success("Login Successfully")
           setTimeout(() => {
             window.location.href = "/leaderboard"
           }, 1000)
