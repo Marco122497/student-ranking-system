@@ -28,6 +28,7 @@ import { Input } from "@/components/ui/input"
 import { supabase } from "@/lib/supabase"
 import { toast } from "sonner"
 import { Toaster } from "@/components/ui/sonner"
+import { Eye, EyeOff } from "lucide-react"
 
 export function LoginForm({
   className,
@@ -37,6 +38,7 @@ export function LoginForm({
   const [password, setPassword] = useState("")
   const [yearLevel, setYearLevel] = useState("")
   const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -136,14 +138,28 @@ export function LoginForm({
 
               <Field>
                 <FieldLabel htmlFor="password">Password</FieldLabel>
-                <Input 
-                  id="password" 
-                  type="password" 
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required 
-                />
+                <div className="relative">
+                  <Input 
+                    id="password" 
+                    type={showPassword ? "text" : "password"} 
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required 
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4 text-gray-400" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-gray-400" />
+                    )}
+                  </button>
+                </div>
               </Field>
               <Field>
                 <FieldLabel htmlFor="yearLevel">Year Level</FieldLabel>
