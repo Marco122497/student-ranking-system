@@ -123,9 +123,9 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Georgia', 'Times New Roman', serif;
+    font-family: Arial, sans-serif;
   }
   html {
-    font-family: 'Georgia', 'Times New Roman', serif;
+    font-family: Arial, sans-serif;
   }
 }

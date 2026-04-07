@@ -109,65 +109,13 @@ export default function Leaderboard() {
             </div>
           </div>
 
-          {/* Top 3 Rankings with Tie Handling */}
-        {students && students.length > 0 && (
-          <div className="flex justify-center items-start gap-8 mb-8 flex-wrap">
-            {/* Group students by rank */}
-            {(() => {
-              const rankGroups: { [rank: number]: typeof students } = {};
-              let currentRank = 1;
-              students.forEach((student, index) => {
-                if (index > 0 && student.score < students[index - 1].score) {
-                  currentRank = index + 1;
-                }
-                if (!rankGroups[currentRank]) rankGroups[currentRank] = [];
-                rankGroups[currentRank].push(student);
-              });
-              
-              return [1, 2, 3].map((targetRank) => {
-                const group = rankGroups[targetRank];
-                if (!group) return null;
-                
-                const isFirst = targetRank === 1;
-                const isSecond = targetRank === 2;
-                const isThird = targetRank === 3;
-                
-                return (
-                  <div key={targetRank} className="flex flex-col items-center text-center">
-                    <div className="relative">
-                      {isFirst && <Trophy className="w-16 h-16 text-yellow-500 mb-2" />}
-                      {isSecond && <Medal className="w-16 h-16 text-gray-400 mb-2" />}
-                      {isThird && <Award className="w-16 h-16 text-amber-600 mb-2" />}
-                      <span className={`absolute -top-1 -right-6 text-sm font-bold px-2 py-0.5 rounded-full ${
-                        isFirst ? 'text-yellow-600 bg-yellow-100' : 
-                        isSecond ? 'text-gray-600 bg-gray-100' : 
-                        'text-amber-700 bg-amber-100'
-                      }`}>
-                        {targetRank === 1 ? '1st' : targetRank === 2 ? '2nd' : '3rd'}
-                      </span>
-                    </div>
-                    {group.map((student, idx) => (
-                      <div key={student.id} className={idx > 0 ? 'mt-4 pt-4 border-t border-gray-200' : ''}>
-                        <div className="text-lg font-bold text-gray-900">{student.name}</div>
-                        <div className="text-sm text-gray-700">
-                          <span className={student.score < PASSING_SCORE ? 'blur-sm' : ''}>
-                            {student.score}
-                          </span> points
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                );
-              });
-            })()}
-          </div>
-        )}
+
 
           <Table className="bg-white rounded-lg border border-gray-200">
             <TableHeader className="bg-gray-50 border-b">
               <TableRow>
                 <TableHead className="w-16 text-center font-medium text-gray-700">Rank</TableHead>
-                <TableHead className="font-medium text-gray-700">Student Name</TableHead>
+                <TableHead className="font-medium text-gray-700">ID Number</TableHead>
                 <TableHead className="text-right font-medium text-gray-700">Exam Score</TableHead>
               </TableRow>
             </TableHeader>
@@ -187,22 +135,34 @@ export default function Leaderboard() {
                   >
                     <TableCell className="text-center">
                       <span className={`font-semibold ${isTop3 ? 'text-lg' : ''}`}>
-                        {rank === 1 ? <Trophy className="w-5 h-5 text-yellow-500 inline" /> : 
-                         rank === 2 ? <Medal className="w-5 h-5 text-gray-400 inline" /> : 
-                         rank === 3 ? <Award className="w-5 h-5 text-amber-600 inline" /> : 
-                         rank}
+                        {rank === 1 ? (
+                          <span className="flex items-center justify-center gap-1">
+                            <Trophy className="w-5 h-5 text-yellow-500 inline" />
+                            <span className="text-sm">1st</span>
+                          </span>
+                        ) : rank === 2 ? (
+                          <span className="flex items-center justify-center gap-1">
+                            <Medal className="w-5 h-5 text-gray-400 inline" />
+                            <span className="text-sm">2nd</span>
+                          </span>
+                        ) : rank === 3 ? (
+                          <span className="flex items-center justify-center gap-1">
+                            <Award className="w-5 h-5 text-amber-600 inline" />
+                            <span className="text-sm">3rd</span>
+                          </span>
+                        ) : (
+                          rank
+                        )}
                       </span>
                     </TableCell>
                     <TableCell className="font-medium text-gray-900">
                       {isTop3 && (
                         <span className="inline-block w-2 h-2 rounded-full mr-2 bg-yellow-400"></span>
                       )}
-                      {student.name}
+                      {isTop3 ? student.name : (student.users?.username || student.name)}
                     </TableCell>
                     <TableCell className="text-right font-semibold text-gray-900">
-                      <span className={student.score < PASSING_SCORE ? 'blur-sm' : ''}>
-                        {student.score}
-                      </span>
+                      {student.score}
                     </TableCell>
                   </TableRow>
                 );
@@ -211,7 +171,6 @@ export default function Leaderboard() {
             <TableCaption className="text-gray-600 py-4">
               <div className="flex flex-col items-center justify-center gap-2">
                 <span>Total <span className="font-bold text-gray-900">{students?.length || 0}</span> students</span>
-                <span>- Scores below 60 are blurred for privacy -</span>
               </div>
             </TableCaption>
           </Table>

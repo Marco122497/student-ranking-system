@@ -118,7 +118,7 @@ export function LoginForm({
         <CardHeader className="text-center">
           <CardTitle className="text-xl">Welcome back</CardTitle>
           <CardDescription>
-            The Creator of this system is Handsome
+            This is a student ranking system
           </CardDescription>
         </CardHeader>
         <CardContent>
