@@ -13,6 +13,13 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
   Table,
   TableBody,
   TableCaption,
@@ -109,24 +116,50 @@ export default function Leaderboard() {
             </div>
           </div>
 
-
+         
+          <Card className="mb-6">
+            <CardHeader className="text-center">
+              <CardTitle className="text-lg">
+                <span className="text-blue-600">Rankings</span> matter!
+              </CardTitle>
+              <CardDescription>
+                See where you stand among {currentUser?.year_level || 'your year level'} students! 
+                Every score impacts your position in this academic ranking system.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex justify-center gap-6 text-sm">
+                <div className="flex items-center gap-2">
+                  <Trophy className="w-4 h-4 text-yellow-500" />
+                  <span className="font-medium text-yellow-600">Top Score: {students?.[0]?.score || 0}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Users className="w-4 h-4 text-blue-500" />
+                  <span className="font-medium text-blue-600">Total Students: {students?.length || 0}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           <Table className="bg-white rounded-lg border border-gray-200">
             <TableHeader className="bg-gray-50 border-b">
               <TableRow>
                 <TableHead className="w-16 text-center font-medium text-gray-700">Rank</TableHead>
-                <TableHead className="font-medium text-gray-700">ID Number</TableHead>
+                <TableHead className="font-medium text-gray-700">Student Names</TableHead>
                 <TableHead className="text-right font-medium text-gray-700">Exam Score</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {students?.map((student, index, arr) => {
-                let rank = index + 1;
-                if (index > 0 && student.score === arr[index - 1].score) {
-                  rank = arr[index - 1].calculatedRank || rank;
+                let rank = 1;
+                // Count unique scores higher than current student's score
+                const uniqueScores = new Set();
+                for (let i = 0; i < index; i++) {
+                  uniqueScores.add(arr[i].score);
                 }
+                rank = uniqueScores.size + 1;
                 student.calculatedRank = rank;
-                const isTop3 = rank <= 3;
+                const isTop3 = student.calculatedRank <= 3;
                 
                 return (
                   <TableRow 
@@ -135,23 +168,23 @@ export default function Leaderboard() {
                   >
                     <TableCell className="text-center">
                       <span className={`font-semibold ${isTop3 ? 'text-lg' : ''}`}>
-                        {rank === 1 ? (
+                        {student.calculatedRank === 1 ? (
                           <span className="flex items-center justify-center gap-1">
                             <Trophy className="w-5 h-5 text-yellow-500 inline" />
                             <span className="text-sm">1st</span>
                           </span>
-                        ) : rank === 2 ? (
+                        ) : student.calculatedRank === 2 ? (
                           <span className="flex items-center justify-center gap-1">
                             <Medal className="w-5 h-5 text-gray-400 inline" />
                             <span className="text-sm">2nd</span>
                           </span>
-                        ) : rank === 3 ? (
+                        ) : student.calculatedRank === 3 ? (
                           <span className="flex items-center justify-center gap-1">
                             <Award className="w-5 h-5 text-amber-600 inline" />
                             <span className="text-sm">3rd</span>
                           </span>
                         ) : (
-                          rank
+                          student.calculatedRank
                         )}
                       </span>
                     </TableCell>
@@ -159,7 +192,9 @@ export default function Leaderboard() {
                       {isTop3 && (
                         <span className="inline-block w-2 h-2 rounded-full mr-2 bg-yellow-400"></span>
                       )}
-                      {isTop3 ? student.name : (student.users?.username || student.name)}
+                      <span className={student.score < 54 ? 'blur-sm' : ''}>
+                        {student.name}
+                      </span>
                     </TableCell>
                     <TableCell className="text-right font-semibold text-gray-900">
                       {student.score}
