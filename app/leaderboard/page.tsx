@@ -194,9 +194,7 @@ export default function Leaderboard() {
                       {isTop3 && (
                         <span className="inline-block w-2 h-2 rounded-full mr-2 bg-yellow-400"></span>
                       )}
-                      <span className={student.score < 54 ? 'blur-sm' : ''}>
-                        {student.name}
-                      </span>
+                      {student.score < 54 ? student.users?.username || student.name : student.name}
                     </TableCell>
                     <TableCell className="text-right font-semibold text-gray-900">
                       {student.score}
