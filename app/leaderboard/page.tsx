@@ -152,14 +152,16 @@ export default function Leaderboard() {
             <TableBody>
               {students?.map((student, index, arr) => {
                 let rank = 1;
-                // Count unique scores higher than current student's score
-                const uniqueScores = new Set();
+                // Count unique higher scores for dense ranking
+                const higherScores = new Set();
                 for (let i = 0; i < index; i++) {
-                  uniqueScores.add(arr[i].score);
+                  if (arr[i].score > student.score) {
+                    higherScores.add(arr[i].score);
+                  }
                 }
-                rank = uniqueScores.size + 1;
+                rank = higherScores.size + 1;
                 student.calculatedRank = rank;
-                const isTop3 = student.calculatedRank <= 3;
+                const isTop3 = rank <= 3;
                 
                 return (
                   <TableRow 
