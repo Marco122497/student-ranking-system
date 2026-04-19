@@ -28,16 +28,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Trophy, Medal, Award, TrendingUp, Users, Eye, EyeOff, LogOut } from "lucide-react";
+import { Trophy, Medal, Award, TrendingUp, Users, Eye, EyeOff, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function Leaderboard() {
   const [students, setStudents] = useState<any[]>([]);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+  const [scoreType, setScoreType] = useState<"semi_final" | "final_exam">("semi_final");
   const PASSING_SCORE = 60;
 
   useEffect(() => {
@@ -53,7 +55,7 @@ export default function Leaderboard() {
     
     // Load students data with year level filter
     loadStudents();
-  }, []);
+  }, [scoreType]);
 
   const loadStudents = async () => {
     const studentUser = localStorage.getItem("studentUser");
@@ -72,7 +74,7 @@ export default function Leaderboard() {
         )
       `)
       .eq("year_level", userYearLevel)
-      .order("score", { ascending: false });
+      .order(scoreType, { ascending: false });
     setStudents(data || []);
     setLoading(false);
   };
@@ -109,6 +111,14 @@ export default function Leaderboard() {
               </div>
             </div>
             <div className="flex items-center gap-3">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => window.location.href = "/student"}
+              >
+                <User className="w-4 h-4 mr-2" />
+                My Score
+              </Button>
               <Button variant="outline" size="sm" onClick={() => setLogoutDialogOpen(true)}>
                 <LogOut className="w-4 h-4 mr-2" />
                 Logout
@@ -126,12 +136,23 @@ export default function Leaderboard() {
                 See where you stand among {currentUser?.year_level || 'your year level'} students! 
                 Every score impacts your position in this academic ranking system.
               </CardDescription>
+              <div className="mt-4">
+                <Select value={scoreType} onValueChange={(value: "semi_final" | "final_exam") => setScoreType(value)}>
+                  <SelectTrigger className="w-48 mx-auto">
+                    <SelectValue placeholder="Select exam type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="semi_final">Semi-Final Exam</SelectItem>
+                    <SelectItem value="final_exam">Final Exam</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="flex justify-center gap-6 text-sm">
                 <div className="flex items-center gap-2">
                   <Trophy className="w-4 h-4 text-yellow-500" />
-                  <span className="font-medium text-yellow-600">Top Score: {students?.[0]?.score || 0}</span>
+                  <span className="font-medium text-yellow-600">Top Score: {students?.[0]?.[scoreType] || 0}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Users className="w-4 h-4 text-blue-500" />
@@ -145,8 +166,10 @@ export default function Leaderboard() {
             <TableHeader className="bg-gray-50 border-b">
               <TableRow>
                 <TableHead className="w-16 text-center font-medium text-gray-700">Rank</TableHead>
-                <TableHead className="font-medium text-gray-700">Student Names</TableHead>
-                <TableHead className="text-right font-medium text-gray-700">Exam Score</TableHead>
+                <TableHead className="font-medium text-gray-700">Username</TableHead>
+                <TableHead className="text-right font-medium text-gray-700">
+                  {scoreType === "semi_final" ? "Semi-Final" : "Final Exam"}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -155,18 +178,19 @@ export default function Leaderboard() {
                 // Count unique higher scores for dense ranking
                 const higherScores = new Set();
                 for (let i = 0; i < index; i++) {
-                  if (arr[i].score > student.score) {
-                    higherScores.add(arr[i].score);
+                  if (arr[i][scoreType] > student[scoreType]) {
+                    higherScores.add(arr[i][scoreType]);
                   }
                 }
                 rank = higherScores.size + 1;
                 student.calculatedRank = rank;
                 const isTop3 = rank <= 3;
+                const isCurrentUser = student.users?.username === currentUser?.username;
                 
                 return (
                   <TableRow 
                     key={student.id} 
-                    className={`border-b ${isTop3 ? 'bg-gray-50' : 'hover:bg-gray-50'}`}
+                    className={`border-b ${isTop3 ? 'bg-gray-50' : 'hover:bg-gray-50'} ${isCurrentUser ? 'bg-blue-100' : ''}`}
                   >
                     <TableCell className="text-center">
                       <span className={`font-semibold ${isTop3 ? 'text-lg' : ''}`}>
@@ -190,14 +214,17 @@ export default function Leaderboard() {
                         )}
                       </span>
                     </TableCell>
-                    <TableCell className="font-medium text-gray-900">
+                    <TableCell className={`font-medium ${isCurrentUser ? 'text-blue-700 font-bold' : 'text-gray-900'}`}>
                       {isTop3 && (
                         <span className="inline-block w-2 h-2 rounded-full mr-2 bg-yellow-400"></span>
                       )}
-                      {student.score < 54 ? student.users?.username || student.name : student.name}
+                      {student.users?.username || 'N/A'}
+                      {isCurrentUser && (
+                        <span className="ml-2 px-2 py-0.5 text-xs bg-blue-500 text-white rounded-full">You</span>
+                      )}
                     </TableCell>
                     <TableCell className="text-right font-semibold text-gray-900">
-                      {student.score}
+                      {scoreType === "semi_final" ? student.semi_final : student.final_exam ?? '-'}
                     </TableCell>
                   </TableRow>
                 );

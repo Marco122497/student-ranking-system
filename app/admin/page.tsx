@@ -36,12 +36,14 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { MoreHorizontalIcon, Trophy, Users, Settings, LogOut, Eye, EyeOff } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 
 export default function Admin() {
   const [name, setName] = useState("");
-  const [score, setScore] = useState("");
+  const [semiFinal, setSemiFinal] = useState("");
+  const [finalExam, setFinalExam] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [yearLevel, setYearLevel] = useState("");
@@ -50,13 +52,15 @@ export default function Admin() {
   const [students, setStudents] = useState<any[]>([]);
   const [filteredStudents, setFilteredStudents] = useState<any[]>([]);
   const [selectedYearFilter, setSelectedYearFilter] = useState<string>("BSCS-3");
+  const [scoreType, setScoreType] = useState<"semi_final" | "final_exam">("semi_final");
   const [isAddingStudent, setIsAddingStudent] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const [editName, setEditName] = useState("");
-  const [editScore, setEditScore] = useState("");
+  const [editSemiFinal, setEditSemiFinal] = useState("");
+  const [editFinalExam, setEditFinalExam] = useState("");
   const [editUsername, setEditUsername] = useState("");
   const [editPassword, setEditPassword] = useState("");
   const [editYearLevel, setEditYearLevel] = useState("");
@@ -78,6 +82,12 @@ export default function Admin() {
     setFilteredStudents(students.filter(student => student.year_level === selectedYearFilter));
   }, [students, selectedYearFilter]);
 
+  // Sort students based on selected score type
+  useEffect(() => {
+    const sorted = [...filteredStudents].sort((a, b) => b[scoreType] - a[scoreType]);
+    setFilteredStudents(sorted);
+  }, [scoreType]);
+
   // Load students data with user information
   const loadStudents = async () => {
     const { data } = await supabase
@@ -89,7 +99,7 @@ export default function Admin() {
           role
         )
       `)
-      .order("score", { ascending: false });
+      .order("semi_final", { ascending: false });
     setStudents(data || []);
   };
 
@@ -117,7 +127,8 @@ export default function Admin() {
   const startEdit = (student: any) => {
     setSelectedStudent(student);
     setEditName(student.name);
-    setEditScore(student.score.toString());
+    setEditSemiFinal(student.semi_final?.toString() || "");
+    setEditFinalExam(student.final_exam?.toString() || "");
     setEditUsername(student.users?.username || "");
     setEditPassword(""); // Clear password field for security
     setEditYearLevel(student.year_level || "");
@@ -128,7 +139,7 @@ export default function Admin() {
     // Update student record
     await supabase
       .from("students")
-      .update({ name: editName, score: Number(editScore), year_level: editYearLevel })
+      .update({ name: editName, semi_final: Number(editSemiFinal), final_exam: Number(editFinalExam) || null, year_level: editYearLevel })
       .eq("id", selectedStudent.id);
     
     // Update associated user record (only if password is provided)
@@ -145,7 +156,8 @@ export default function Admin() {
     
     setEditDialogOpen(false);
     setEditName("");
-    setEditScore("");
+    setEditSemiFinal("");
+    setEditFinalExam("");
     setEditUsername("");
     setEditPassword("");
     setEditYearLevel("");
@@ -168,7 +180,7 @@ export default function Admin() {
   };
 
   const addStudent = async () => {
-    if (!name || !score || !username || !password || !yearLevel) {
+    if (!name || !semiFinal || !username || !password || !yearLevel) {
       toast.error("Please fill all fields");
       return;
     }
@@ -193,7 +205,8 @@ export default function Admin() {
       const { error: studentError } = await supabase.from("students").insert([
         { 
           name, 
-          score: Number(score), 
+          semi_final: Number(semiFinal), 
+          final_exam: Number(finalExam) || null,
           year_level: yearLevel,
           user_id: userData.id
         },
@@ -209,7 +222,8 @@ export default function Admin() {
       toast.success("Student added successfully!");
       // Clear all form fields
       setName("");
-      setScore("");
+      setSemiFinal("");
+      setFinalExam("");
       setUsername("");
       setPassword("");
       setYearLevel("");
@@ -252,12 +266,21 @@ export default function Admin() {
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">Exam Score</label>
+              <label className="text-sm font-medium text-gray-700 mb-1 block">Semi-Final Score</label>
               <Input
-                placeholder="Score"
+                placeholder="Semi-Final Score"
                 type="number"
-                value={score}
-                onChange={(e) => setScore(e.target.value)}
+                value={semiFinal}
+                onChange={(e) => setSemiFinal(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-1 block">Final Exam Score</label>
+              <Input
+                placeholder="Final Exam Score (optional)"
+                type="number"
+                value={finalExam}
+                onChange={(e) => setFinalExam(e.target.value)}
               />
             </div>
             <div>
@@ -308,15 +331,27 @@ export default function Admin() {
           </div>
         </div>
 
-        {/* Year Level Filter */}
-        <div className="mb-6">
-          <div className="flex items-center gap-4">
-            <label className="text-sm font-medium text-gray-700">Select Year Level:</label>
+        {/* Filters */}
+        <div className="mb-6 flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-700">Year Level:</label>
             <NativeSelect value={selectedYearFilter} onChange={(e) => setSelectedYearFilter(e.target.value)}>
               <NativeSelectOption value="BSCS-3">BSCS-3</NativeSelectOption>
               <NativeSelectOption value="Set A">BSCS-2 (Set A)</NativeSelectOption>
               <NativeSelectOption value="Set B">BSCS-2 (Set B)</NativeSelectOption>
             </NativeSelect>
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-700">Exam Type:</label>
+            <Select value={scoreType} onValueChange={(value: "semi_final" | "final_exam") => setScoreType(value)}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Select exam" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="semi_final">Semi-Final</SelectItem>
+                <SelectItem value="final_exam">Final Exam</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
@@ -328,14 +363,16 @@ export default function Admin() {
               <TableHead className="font-medium text-gray-700">Student Name</TableHead>
               <TableHead className="font-medium text-gray-700">Username</TableHead>
               <TableHead className="font-medium text-gray-700">Year Level</TableHead>
-              <TableHead className="text-right font-medium text-gray-700">Score</TableHead>
+              <TableHead className="text-right font-medium text-gray-700">
+                {scoreType === "semi_final" ? "Semi-Final" : "Final Exam"}
+              </TableHead>
               <TableHead className="w-16 text-center font-medium text-gray-700">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredStudents?.map((student, index, arr) => {
               let rank = index + 1;
-              if (index > 0 && student.score === arr[index - 1].score) {
+              if (index > 0 && student[scoreType] === arr[index - 1][scoreType]) {
                 rank = arr[index - 1].calculatedRank || rank;
               }
               student.calculatedRank = rank;
@@ -374,7 +411,7 @@ export default function Admin() {
                     </span>
                   </TableCell>
                   <TableCell className="text-right font-semibold text-gray-900">
-                    {student.score}
+                    {scoreType === "semi_final" ? student.semi_final : student.final_exam ?? '-'}
                   </TableCell>
                   <TableCell className="text-center">
                     <DropdownMenu>
@@ -430,13 +467,23 @@ export default function Admin() {
                 />
               </div>
               <div className="space-y-2">
-                <label htmlFor="edit-score" className="text-sm font-medium">Score</label>
+                <label htmlFor="edit-semi-final" className="text-sm font-medium">Semi-Final Score</label>
                 <Input
-                  id="edit-score"
+                  id="edit-semi-final"
                   type="number"
-                  value={editScore}
-                  onChange={(e) => setEditScore(e.target.value)}
-                  placeholder="Enter score"
+                  value={editSemiFinal}
+                  onChange={(e) => setEditSemiFinal(e.target.value)}
+                  placeholder="Enter semi-final score"
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="edit-final-exam" className="text-sm font-medium">Final Exam Score</label>
+                <Input
+                  id="edit-final-exam"
+                  type="number"
+                  value={editFinalExam}
+                  onChange={(e) => setEditFinalExam(e.target.value)}
+                  placeholder="Enter final exam score (optional)"
                 />
               </div>
               <div className="space-y-2">

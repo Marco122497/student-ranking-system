@@ -99,7 +99,7 @@ export function LoginForm({
           localStorage.setItem("studentUser", JSON.stringify(studentUserWithYearLevel))
           toast.success("Login Successfully")
           setTimeout(() => {
-            window.location.href = "/leaderboard"
+            window.location.href = "/student"
           }, 1000)
         } else {
           toast.error("Invalid user role")
@@ -116,9 +116,9 @@ export function LoginForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader className="text-center">
-          <CardTitle className="text-xl">Welcome back</CardTitle>
+          <CardTitle className="text-xl">Student Score Ranking System</CardTitle>
           <CardDescription>
-            This is a student ranking system
+            HI!, Welcome 
           </CardDescription>
         </CardHeader>
         <CardContent>
